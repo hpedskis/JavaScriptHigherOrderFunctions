@@ -121,8 +121,30 @@ console.log(mapWithParseInt(['123', '1', '98']));
  For example, the following string literal is in INI format - "foo=bar\nbaz=qux\nquxx=corge".
  */
 function simpleINIParse(s){
+    let keyValObj = {
+
+    };
+    const res = keyValObj;
+    let pieces = s.split('\n').reduce(function(res, currPiece) {
+        let newSplit = currPiece.split('=');
+        let keyVal = newSplit[0];
+        let value = newSplit[1];
+        if(value === undefined ){
+            value = '';
+        }
+        if(keyVal === undefined){
+            keyVal = '';
+        }
+        res [keyVal] = value;
+        //console.log(res);
+        return res;
+
+    }, {});
+    return pieces;
 
 }
+let s = "foo=bar\nbaz=\n=qux";
+console.log(simpleINIParse(s));
 
 /*
  This function will take a parsing function and turn it into a function that opens a file and
