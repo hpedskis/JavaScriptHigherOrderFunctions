@@ -99,17 +99,17 @@ function mapWith(fn){
 
     return function(...arg){
         let arr = [...arg];
-        console.log(arr[0]);
-        let newArr = arr[0];
-        console.log(newArr);
-        let newArray = newArr.map(fn);
+        let arrayOfArgs = arr[0];
+        let newArray = arrayOfArgs.map(function(arg){
+            return fn(arg);
+        });
         return newArray;
     }
 
 }
 function square(n) {return n * n;};
 const mapWithSquare = mapWith(square);
-//console.log(mapWithSquare([1,3,3, 4, 5]));
+console.log(mapWithSquare([1,3,3, 4, 5]));
 const mapWithParseInt = mapWith(parseInt);
 console.log(mapWithParseInt(['123', '1', '98']));
 
