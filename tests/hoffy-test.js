@@ -76,7 +76,7 @@ describe('hoffy', function() {
         it('creates a function that reads a file and automatically parses it as an INI file', function(done) {
             const readFileWithSimpleINIParse = readFileWith(simpleINIParse);
             const obj = {foo: 'bar', baz: 'qux', quxx: 'corge'};
-            readFileWithSimpleINIParse('tests/config.ini', (err, data) => {
+            readFileWithSimpleINIParse('../tests/config.ini', (err, data) => {
                 expect(data).to.eql(obj);
                 expect(err).to.be.null;
                 done();
@@ -86,7 +86,7 @@ describe('hoffy', function() {
         it('creates a function that reads a file and automatically parses it as an JSON file', function(done) {
             const readFileWithJSONParse = readFileWith(JSON.parse);
             const obj = {foo: 'bar', baz: [1, 2, 3]};
-            readFileWithJSONParse('tests/config.json', (err, data) => {
+            readFileWithJSONParse('../tests/config.json', (err, data) => {
                 expect(data).to.eql(obj);
                 expect(err).to.be.null;
                 done();
@@ -95,7 +95,7 @@ describe('hoffy', function() {
         });
         it('creates a function that propagates err object if error occurs (for example, file does not exist)', function(done) {
             const readFileWithJSONParse = readFileWith(JSON.parse);
-            readFileWithJSONParse('tests/doesNotExist.dne', (err, data) => {
+            readFileWithJSONParse('../tests/doesNotExist.dne', (err, data) => {
                 expect(err).to.not.be.null;
                 expect(data).to.be.undefined;
                 done();

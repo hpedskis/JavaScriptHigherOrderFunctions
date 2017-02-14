@@ -1,5 +1,5 @@
 // hoffy.js
-
+const file = require('fs');
 /*/
  This function demonstrates the use of the rest operator (ES6) or using the built-in arguments object.
  Multiplies all of the arguments together and returns the resulting product.
@@ -10,7 +10,7 @@ function prod(...args){
     if(args.length === 0){
         return undefined;
     }
-    let total =  Array.prototype.slice.call(args).reduce(function(a, b) {
+    const total = Array.prototype.slice.call(args).reduce(function(a, b) {
 
         return a * b;
     }, 1);
@@ -24,7 +24,7 @@ function prod(...args){
  */
 function any(array, fn){
 
-   let filtered = array.filter(fn);
+   const filtered = array.filter(fn);
    if(filtered.length === 0){
        return false;
    }
@@ -46,7 +46,7 @@ function maybe(fn){
         }
         const Newname = fn(...arg);
         return Newname;
-    }
+    };
 
 }
 /*
@@ -65,7 +65,7 @@ function constrainDecorator(fn, min, max){
         }
         const parsedValue = fn(...arg);
         return parsedValue;
-    }
+    };
 
 }
 
@@ -76,8 +76,8 @@ function constrainDecorator(fn, min, max){
  from being called again if it goes over the max number of allowed function calls.
  */
 function limitCallsDecorator(fn, n){
-    let numTimesCalled = 1;
-    return function(...arg){
+    let numTimesCalled = 0;
+     function newFn(...arg){
         if(numTimesCalled >= n){
             return undefined;
         }else{
@@ -87,8 +87,10 @@ function limitCallsDecorator(fn, n){
         }
 
     }
+    return newFn;
 
 }
+
 
 /*
  This is different from regular map. The regular version of map immediately calls the callback function on
@@ -98,20 +100,22 @@ function limitCallsDecorator(fn, n){
 function mapWith(fn){
 
     return function(...arg){
-        let arr = [...arg];
-        let arrayOfArgs = arr[0];
-        let newArray = arrayOfArgs.map(function(arg){
+        const arr = [...arg];
+        const arrayOfArgs = arr[0];
+        const newArray = arrayOfArgs.map(function(arg){
             return fn(arg);
         });
         return newArray;
-    }
+    };
 
 }
+/*/
 function square(n) {return n * n;};
 const mapWithSquare = mapWith(square);
 console.log(mapWithSquare([1,3,3, 4, 5]));
 const mapWithParseInt = mapWith(parseInt);
 console.log(mapWithParseInt(['123', '1', '98']));
+/*/
 
 /*
  For this function, we'll assume that the string being passed in is in a simplified INI format:
@@ -121,29 +125,29 @@ console.log(mapWithParseInt(['123', '1', '98']));
  For example, the following string literal is in INI format - "foo=bar\nbaz=qux\nquxx=corge".
  */
 function simpleINIParse(s){
-    let keyValObj = {
+    function parse(s) {
+        //const res = {};
+        const pieces = s.split('\n').filter((ele) => ele.includes('=')).reduce(function (res, currPiece) {
+            const newSplit = currPiece.split('=');
+            let keyVal = newSplit[0];
+            let value = newSplit[1];
+            if (value === undefined) {
+                value = '';
+            }
+            if (keyVal === undefined) {
+                keyVal = '';
+            }
+            res [keyVal] = value;
+            //console.log(res);
+            return res;
 
-    };
-    const res = keyValObj;
-    let pieces = s.split('\n').reduce(function(res, currPiece) {
-        let newSplit = currPiece.split('=');
-        let keyVal = newSplit[0];
-        let value = newSplit[1];
-        if(value === undefined ){
-            value = '';
-        }
-        if(keyVal === undefined){
-            keyVal = '';
-        }
-        res [keyVal] = value;
-        //console.log(res);
-        return res;
-
-    }, {});
-    return pieces;
+        }, {});
+        return pieces;
+    }
+    return parse(s);
 
 }
-let s = "foo=bar\nbaz=\n=qux";
+const s = "foo=bar\nbaz=qux\nquxx=corge";
 console.log(simpleINIParse(s));
 
 /*
@@ -153,6 +157,33 @@ console.log(simpleINIParse(s));
 
 
  */
-function readFileWith(fn){
+//fs.readFile('tests/config.json')
+function readFileWith(fn){ //fn is the parsing function
+    ///...arg should be the file name and the callback
+        function newFn(filename, cb){
+            file.readFile(filename,'utf8', function(err, data){
+                if (err){
+                    //const res = err;
+                    //console.log("error");
+                    cb(err, undefined);
+                }
+                else{
+                   cb(err, fn(data));
+                }
+            });
+        }
+    return newFn;
+    }
 
-}
+
+module.exports = {
+    prod: prod,
+    any: any,
+    maybe: maybe,
+    constrainDecorator: constrainDecorator,
+    limitCallsDecorator: limitCallsDecorator,
+    mapWith: mapWith,
+    simpleINIParse: simpleINIParse,
+    readFileWith: readFileWith
+
+};
