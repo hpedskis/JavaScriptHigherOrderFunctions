@@ -1,5 +1,5 @@
 // basketfunc.js
-const file = require('fs');
+const request = require('request');
 
 class gameObj{
 
@@ -14,7 +14,7 @@ class gameObj{
         this.gameCity = gameCity.toString();
         this.teamName = teamName.toString();
         const arr = [];
-        for(let x in playerInfo){
+        for(const x in playerInfo){
             arr.push(playerInfo[x]);
         }
         this.playerInfo = arr;
@@ -22,23 +22,39 @@ class gameObj{
     }
 }
 
-file.readFile('../tests/0021600681_gamedetail.json','utf8', function(err, data){
-    if (err){
-        throw err;
+const options = {
+    url: 'https://foureyes.github.io/csci-ua.0480-spring2017-008/homework/02/0021600680_gamedetail.json',
+    headers: {
+        'User-Agent': 'request'
     }
-    else{
-        const obj = JSON.parse(data);
-        //console.log(obj.g.hls);
-        //console.log(obj.g);
-        const gameID = obj.g.nextgid;
-        const gameDate = obj.g.gdte;
+};
 
-        const gameOne = new gameObj(obj.g.hls, gameID, gameDate);
-        const gameTwo = new gameObj(obj.g.vls, gameID, gameDate);
+function callback(error, response, body) {
+    if (!error && response.statusCode === 200) {
 
-       formatOutput(gameOne, gameTwo);
+        const info = JSON.parse(body);
+        console.log("\n");
+        initialSetUp(info);
+        if(info.g.nextgid !== undefined){
+            const next = info.g.nextgid;
+            options.url = ('https://foureyes.github.io/csci-ua.0480-spring2017-008/homework/02/' + next + '_gamedetail.json');
+            request(options, callback);
+        }
     }
-});
+}
+
+request(options, callback);
+
+function initialSetUp(obj){
+    const gameID = obj.g.nextgid;
+    const gameDate = obj.g.gdte;
+
+    const gameOne = new gameObj(obj.g.hls, gameID, gameDate);
+    const gameTwo = new gameObj(obj.g.vls, gameID, gameDate);
+
+    formatOutput(gameOne, gameTwo);
+
+}
 
 function formatOutput(game, game2){
     let result = "";
@@ -125,12 +141,13 @@ function threePointPercentage(game, game2){
     const playerInfo2 = game2.playerInfo;
 
     const qualifyingTeam1 = playerInfo.filter((ele) => {
-        if(parseInt(ele.fga) > 5 ){
+
+        if(parseInt(ele.tpa) >= 5 ){
             return ele;
         }
     });
     const qualifyingTeam2 = playerInfo2.filter((ele) => {
-        if(parseInt(ele.fga) > 5 ){
+        if(parseInt(ele.tpa) >= 5 ){
             return ele;
         }
 
@@ -138,23 +155,28 @@ function threePointPercentage(game, game2){
     let res = "";
     let highestPercent = 0.0;
     let playerWith = "";
-
+    let outOf = '';
     qualifyingTeam1.forEach((ele) =>{
-        const curr = (Math.floor(parseInt(ele.tpm / ele.tpa) * 100));
-        //console.log(curr);
+        const curr = (parseFloat(ele.tpm / ele.tpa) * 100);
         if(curr > highestPercent){
             highestPercent = curr;
             playerWith = (ele.fn + " " + ele.ln);
+            outOf = (ele.tpm + "/" + ele.tpa);
+            //console.log("______highest is " + (ele.fn + " " + ele.ln));
         }
     });
     qualifyingTeam2.forEach((ele) =>{
-        const curr = (Math.floor(parseInt(ele.tpm / ele.tpa) * 100));
+        const curr = parseFloat(ele.tpm / ele.tpa) * 100;
         if(curr > highestPercent){
             highestPercent = curr;
             playerWith = (ele.fn + " " + ele.ln);
+            outOf = (ele.tpm + "/" + ele.tpa);
+            //console.log("______highest is " + (ele.fn + " " + ele.ln));
         }
     });
-    res = res.concat("* Player with highest 3 point percentage: " + playerWith + " at percentage %" + highestPercent);
+    highestPercent = highestPercent.toFixed(2);
+    res = res.concat("* Player with highest 3 point percentage: " + playerWith + " at percentage %" + highestPercent
+    + '(' + outOf + ')');
     return res;
 
 
@@ -191,16 +213,16 @@ function turnovers(game1, game2){
     const playerInfo2 = game2.playerInfo;
 
     let res = "*  Players with more turnovers than assists: \n";
-    res = res.concat(game1.gameCity + " " + game1.teamName + "\n");
+    res = res.concat("\t\t"+ game1.gameCity + " " + game1.teamName + "\n");
     playerInfo.forEach((ele) =>{
         if(ele.tov > ele.ast){
-           res= res.concat("* " + ele.fn + " " + ele.ln + "has an assist to turnover ratio of " + ele.ast + ":" + ele.tov + "\n");
+           res= res.concat("\t\t"+"* " + ele.fn + " " + ele.ln + "has an assist to turnover ratio of " + ele.ast + ":" + ele.tov + "\n");
         }
     });
-    res =res.concat(game2.gameCity + " " + game2.teamName + "\n");
+    res =res.concat("\t\t"+game2.gameCity + " " + game2.teamName + "\n");
     playerInfo2.forEach((ele) =>{
         if(ele.tov > ele.ast){
-            res =res.concat("* " + ele.fn + " " + ele.ln + "has an assist to turnover ratio of " + ele.ast + ":" + ele.tov + "\n");
+            res =res.concat("\t\t"+"* " + ele.fn + " " + ele.ln + "has an assist to turnover ratio of " + ele.ast + ":" + ele.tov + "\n");
         }
     });
     return res;
